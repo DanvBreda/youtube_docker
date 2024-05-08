@@ -1,5 +1,7 @@
 # Youtube_docker
 ### Just a cute youtube downloader with help of pytube, ffmpeg and docker.
+#### Also, I know there are better alternatives, but this was a project for me too play with docker.
+#### Happy offline tubing cheers =)
 
 ## Key Features
 
@@ -28,7 +30,6 @@ $ docker build -t youtube .
 $ docker run -v ./files:/files -it youtube
 ```
 
-Happy viewing cheers =)
 
 > **Note**
 > if you like YouTube don't forget to support them.

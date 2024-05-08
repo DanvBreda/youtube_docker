@@ -17,7 +17,6 @@ COPY . /app
 # Run the command to install any necessary dependencies
 RUN pip install -r requirements.txt
 RUN apt-get -y update
-RUN apt-get install ffmpeg libsm6 libxext6  -y
 
 # Run hello.py when the container launches
 CMD ["python", "main.py"]
