@@ -1,11 +1,20 @@
 from pytube import YouTube
-import ffmpeg, os, subprocess
+import ffmpeg, os
 
-location = 'files'
-file_name = f'{location}/youtube_url.txt'
+file_name           = 'files/youtube_url.txt'
+audio_location      = 'files/audio'
+raw_video_location  = 'files/video/raw'
+video_location      = 'files/video'
 
-with open(file_name) as file:
-    myList = [i for i in file.read().strip().split('\n')]
+def Create_dir():
+    '''Checks if audio and video is available in files, if not, add the directories'''
+
+    if not os.path.exists(audio_location):
+        os.makedirs(audio_location)
+    if not os.path.exists(video_location):
+        os.makedirs(video_location)
+    if not os.path.exists(raw_video_location):
+        os.makedirs(raw_video_location)
 
 def Video_info(link):
     '''returns video info, this is helpfull if the current itags aren't working'''
@@ -15,62 +24,78 @@ def Video_info(link):
         count.append(i)
     print(f"\nThere are {len(count)} ITAGS")
 
+def Video_title(link):
+    '''Creating a readable and writable name'''
+    title = YouTube(link).title.replace('/','').replace('"','').replace("'",'').replace('|','').replace('(','').replace(')','')[0:35]
+    filename = f'{title}.mp4'
+    return filename
+
 def Download_song(link):
     '''Downloads audio of youtube link'''
-    mov_title = YouTube(link).title.replace('/','').replace('"','').replace("'",'').replace('|','').replace('(','').replace(')','')[0:35]
-    filename_audio = f'{mov_title}.mp4'
+
     hd_aud = {258:'384kbps',141:'256kbps',251:'160kbps',140:'128kbps'}
-    if filename_audio not in os.listdir(f'{location}/audio'):
+
+    if Video_title(link) not in os.listdir(f'{audio_location}'):
         for key,value in hd_aud.items():
             try:
-                YouTube(link).streams.get_by_itag(key).download(filename=filename_audio,output_path=f'/{location}/audio')
+                YouTube(link).streams.get_by_itag(key).download(filename=Video_title(link),output_path=f'/{audio_location}')
             except:
                 pass
 
-        print(f'Song {filename_audio}\n(itag {key} - {value}) download is completed successfully')
+        print(f'{Video_title(link)} ({value}) is downloaded successfully')
     else:
-        print(f'No download needed, {filename_audio} already exists')
+        print(f'No download needed, {Video_title(link)} already exists')
 
 def Download_video(link):
     '''Downloads video of youtube link'''
-    mov_title = YouTube(link).title.replace('/','').replace('"','').replace("'",'').replace('|','').replace('(','').replace(')','')[0:35]
-    filename_video = f'{mov_title}_video.mp4'
-    hd_vid = {401:'4k',313:'4k',271:'2k',399:'1080p',248:'1080p',137:'1080p'}
-    if f'{mov_title}.mp4' not in os.listdir(f'files/video'):
+
+    hd_vid = {401:'4k',313:'4k',271:'2k'} #,399:'1080p',248:'1080p',137:'1080p'}
+
+    if Video_title(link) not in os.listdir(f'{raw_video_location}'):
         for key,value in hd_vid.items():
             try:
-                YouTube(link).streams.get_by_itag(key).download(filename=filename_video,output_path=f'/{location}/video')
+                YouTube(link).streams.get_by_itag(key).download(filename=Video_title(link),output_path=f'/{raw_video_location}')
             except:
                 pass
     
-        print(f'Movie {filename_video},\n(itag {key} - {value}) download is completed successfully')
+        print(f'{Video_title(link)} ({value}) is downloaded successfully')
     else:
-        print(f'No download needed, {mov_title}.mp4 already exists')
+        print(f'No download needed, {Video_title(link)} already exists')
 
 def Merge(link):
     '''Merges video and audio of youtube link'''
-    mov_title = YouTube(str(link)).title
-    mov_title = mov_title.replace('/','').replace('"','').replace("'","").replace('|','').replace('(','').replace(')','')[0:35]
-    video = ffmpeg.input(f'/{location}/video/{mov_title}_video.mp4')
-    audio = ffmpeg.input(f'/{location}/audio/{mov_title}.mp4')
-    if f'{mov_title}.mp4' not in os.listdir(f'files/video'):
+
+    video = ffmpeg.input(f'/{raw_video_location}/{Video_title(link)}')
+    audio = ffmpeg.input(f'/{audio_location}/{Video_title(link)}')
+
+    if Video_title(link) not in os.listdir(f'{video_location}'):
         # combines video and audio together
         try:
-            ffmpeg.concat(video, audio, v=1, a=1).output(f'/files/video/{mov_title}.mp4').run(overwrite_output=True)
+            ffmpeg.concat(video, audio, v=1, a=1).output(f'/{video_location}/{Video_title(link)}').run(overwrite_output=True)
             print("Merge is completed successfully")
         
-            # removes old video file
-            os.remove(f'/files/video/{mov_title}_video.mp4') 
+            # removes raw video file
+            os.remove(f'/{raw_video_location}/{Video_title(link)}') 
 
         except:
-            print(f'''\nThere was an issue with combining the files.\ncheck if {mov_title}_video.mp4 and {mov_title}_audio.mp4 are available\nIf not try using info to find the right ITAGS!''')
+            print(f'''\nThere was an issue with combining the files.\ncheck if {Video_title(link)} is available in both {audio_location} and {raw_video_location}''')
     else:
-        print(f'No download needed, {mov_title}.mp4 already exists')
+        print(f'No download needed, {Video_title(link)} already exists')
 
-for i in myList:
-    print('\nDownloading audio....')
-    Download_song(i)
-    print('\nDownloading video....')
-    Download_video(i)
-    print('\nCombining files....')
-    Merge(i)
+def Scrapingtime():
+    '''Code for scraping audio and video'''
+    Create_dir()
+
+    with open(file_name) as file:
+        myList = [i for i in file.read().strip().split('\n')]
+
+    for i in myList:
+        print('\nDownloading audio....')
+        Download_song(i)
+        print('\nDownloading video....')
+        Download_video(i)
+        print('\nCombining files....')
+        Merge(i)
+
+#run code
+Scrapingtime()
