@@ -6,7 +6,7 @@ location = 'files'
 file_name = f'{location}/youtube_url.txt'
 
 with open(file_name) as file:
-    myList = [i for i in file.read().strip().split('\n')]
+    myList = filter(None, [i for i in file.read().strip().split('\n')])
 
 for i in myList:
     print(i)
@@ -15,3 +15,5 @@ for i in myList:
         pass
     else:
         print(len(i))
+
+
