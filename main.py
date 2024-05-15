@@ -16,6 +16,8 @@ def Create_dir():
         os.makedirs(video_location)
     if not os.path.exists(raw_video_location):
         os.makedirs(raw_video_location)
+    if not os.path.exists(raw_video_location):
+        os.makedirs(caption_location)
 
 def Video_info(link=str):
     '''returns video info, this is helpfull if the current itags aren't working'''
