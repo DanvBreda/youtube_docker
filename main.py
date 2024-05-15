@@ -5,6 +5,7 @@ file_name           = 'files/youtube_url.txt'
 audio_location      = 'files/audio'
 raw_video_location  = 'files/video/raw'
 video_location      = 'files/video'
+caption_location    = 'files/caption'
 
 def Create_dir():
     '''Checks if audio and video is available in files, if not, add the directories'''
@@ -16,7 +17,7 @@ def Create_dir():
     if not os.path.exists(raw_video_location):
         os.makedirs(raw_video_location)
 
-def Video_info(link):
+def Video_info(link=str):
     '''returns video info, this is helpfull if the current itags aren't working'''
     count = []
     for i in str(YouTube(link).streams.last).strip().split('<Stream:')[1:]:
@@ -24,13 +25,16 @@ def Video_info(link):
         count.append(i)
     print(f"\nThere are {len(count)} ITAGS")
 
-def Video_title(link):
+def Video_title(link=str,format='mp4'):
     '''Creating a readable and writable name'''
     title = YouTube(link).title.replace('/','').replace('"','').replace("'",'').replace('|','').replace('(','').replace(')','')[0:35]
-    filename = f'{title}.mp4'
+    if format == '':
+        filename = f'{title}'
+    else:
+        filename = f'{title}.{format}'
     return filename
 
-def Download_song(link):
+def Download_song(link=str):
     '''Downloads audio of youtube link'''
 
     hd_aud = {258:'384kbps',141:'256kbps',251:'160kbps',140:'128kbps'}
@@ -46,7 +50,7 @@ def Download_song(link):
     else:
         print(f'No download needed, {Video_title(link)} already exists')
 
-def Download_video(link):
+def Download_video(link=str):
     '''Downloads video of youtube link'''
 
     hd_vid = {401:'4k',313:'4k',271:'2k'} #,399:'1080p',248:'1080p',137:'1080p'}
@@ -62,7 +66,7 @@ def Download_video(link):
     else:
         print(f'No download needed, {Video_title(link)} already exists')
 
-def Merge(link):
+def Merge(link=str):
     '''Merges video and audio of youtube link'''
 
     video = ffmpeg.input(f'/{raw_video_location}/{Video_title(link)}')
@@ -82,6 +86,15 @@ def Merge(link):
     else:
         print(f'No download needed, {Video_title(link)} already exists')
 
+def Download_caption(link=str):
+    '''Downloads captions of youtube link'''
+    captions = ['en','ko']
+    try:
+        for l in captions:
+            YouTube(link).captions[l].download(f'{Video_title(link,"")}',output_path=f'/{caption_location}')
+    except:
+        pass
+
 def Scrapingtime():
     '''Code for scraping audio and video'''
     Create_dir()
@@ -94,6 +107,8 @@ def Scrapingtime():
         Download_song(i)
         print('\nDownloading video....')
         Download_video(i)
+        print('\nDownloading captions....')
+        Download_caption(i)
         print('\nCombining files....')
         Merge(i)
 
