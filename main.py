@@ -1,5 +1,5 @@
 from pytube import YouTube
-import ffmpeg, os
+import ffmpeg, os, subprocess
 
 file_name           = 'files/youtube_url.txt'
 audio_location      = 'files/audio'
@@ -29,7 +29,7 @@ def Video_info(link=str):
 
 def Video_title(link=str,format='mp4'):
     '''Creating a readable and writable name'''
-    title = YouTube(link).title.replace('/','').replace('"','').replace("'",'').replace('|','').replace('(','').replace(')','')[0:35]
+    title = YouTube(link).title.replace('/','').replace('"','').replace("'",'').replace('|','').replace('(','').replace(')','').replace('.','')[0:35]
     if format == '':
         filename = f'{title}'
     else:
@@ -91,11 +91,23 @@ def Merge(link=str):
 def Download_caption(link=str):
     '''Downloads captions of youtube link'''
     captions = ['en','ko']
-    try:
-        for l in captions:
-            YouTube(link).captions[l].download(f'{Video_title(link,"")}',output_path=f'/{caption_location}')
-    except:
-        pass
+    caption_name = Video_title(link,"")
+
+    for l in captions:
+        try:    
+            try:
+                YouTube(link).captions[l].download(title=caption_name,output_path=f'/{caption_location}')
+                old_caption = f'/{caption_location}/{caption_name} ({l}).srt'
+                new_caption = f'/{caption_location}/{caption_name}.{l}.srt'
+                command = os.rename(old_caption, new_caption)
+                subprocess.run(command, shell=True)
+            except FileExistsError as e:
+                command = os.remove(old_caption)
+                subprocess.run(command, shell=True)
+            except KeyError as e:
+                pass
+        except TypeError as e:
+            pass
 
 def Scrapingtime():
     '''Code for scraping audio and video'''
@@ -109,10 +121,10 @@ def Scrapingtime():
         Download_song(i)
         print('\nDownloading video....')
         Download_video(i)
-        print('\nDownloading captions....')
-        Download_caption(i)
         print('\nCombining files....')
         Merge(i)
+        print('\nDownloading captions....')
+        Download_caption(i)
 
 #run code
 Scrapingtime()
